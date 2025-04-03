@@ -67,7 +67,7 @@ if q10 == "9:30":
 
 # Sección de audio
 st.header("🎧 Parte 3: Listening")
-st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
+st.audio("https://github.com/oscarrgd1/ingles/raw/refs/heads/main/leccion1_listening_placeholder.mp3")
 
 # Sección de escritura
 st.header("✍️ Parte 4: Escritura")
