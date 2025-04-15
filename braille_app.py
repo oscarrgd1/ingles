@@ -4,8 +4,8 @@ import os
 from typing import List
 
 # Configura tu clave de API de OpenAI
-openai.api_key = os.getenv("OPENAI_API_KEY")  # Se recomienda establecer esta variable en el entorno
-
+# openai.api_key = os.getenv("OPENAI_API_KEY")  # Se recomienda establecer esta variable en el entorno
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 # Texto completo de la lectura
 LECTURA = """
 Louis Braille was born in 1809 near Paris. When he was three years old, he had an accident, and he became blind. 
