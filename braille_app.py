@@ -86,7 +86,7 @@ if nombre:
         progreso = 0
         respuestas_correctas = 0
         respuestas_usuario = []
-                total_preguntas = len(PREGUNTAS)
+        total_preguntas = len(PREGUNTAS)
         for i, (pregunta, correcta, opciones) in enumerate(PREGUNTAS):
             progreso = int((i / total_preguntas) * 100)
             st.progress(progreso, text=f"Pregunta {i+1} de {total_preguntas}")
