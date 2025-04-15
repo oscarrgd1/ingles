@@ -6,7 +6,7 @@ from typing import List
 from openai import OpenAI
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# st.set_page_config(page_title="Evaluación de Listening", layout="centered")
+st.set_page_config(page_title="Evaluación de Listening", layout="centered")
 
 # Texto completo de la lectura
 LECTURA = """
@@ -100,16 +100,29 @@ if nombre:
 
             st.success(f"Tu calificación en preguntas de opción múltiple es: {calif_objetiva}/100")
 
-    if st.button("Registrar inicio de práctica", key="registrar_inicio"):
+    # Este botón se elimina para evitar duplicados. Ahora solo se registra tras ambas evaluaciones.
         import pandas as pd
         from datetime import datetime
         archivo = "resultados.csv"
         if not os.path.exists(archivo):
-            pd.DataFrame(columns=["Nombre", "Fecha", "GPT", "OpcionMultiple"]).to_csv(archivo, index=False)
+            pd.DataFrame(columns=["Nombre", "Fecha", "Habilidad", "GPT", "OpcionMultiple"]).to_csv(archivo, index=False)
 
         if "calif_objetiva" in st.session_state and "calificacion_abierta" in st.session_state:
             st.markdown("---")
             st.header("Resultado final")
+
+            promedio_general = round((st.session_state.calificacion_abierta + st.session_state.calif_objetiva) / 2, 2)
+            st.write(f"**Promedio general:** {promedio_general}/100")
+
+            if promedio_general >= 90:
+                st.balloons()
+                st.success("🏅 ¡Felicidades! Has obtenido la medalla de oro por tu excelente desempeño.")
+            elif promedio_general >= 75:
+                st.success("🥈 Muy bien hecho. Has obtenido la medalla de plata.")
+            elif promedio_general >= 60:
+                st.success("🥉 Buen esfuerzo. Has obtenido la medalla de bronce.")
+            else:
+                st.info("🎯 Sigue practicando. ¡Cada intento te acerca más a la meta!")
             st.write(f"**Nombre del estudiante:** {nombre}")
             st.write(f"**Comprensión general (GPT):** {st.session_state.calificacion_abierta}/100")
             st.write(f"**Opción múltiple:** {st.session_state.calif_objetiva}/100")
@@ -124,11 +137,12 @@ if nombre:
 
             # Guardar resultados en CSV
             nueva_fila = {
-                "Nombre": nombre,
-                "Fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "GPT": st.session_state.calificacion_abierta,
-                "OpcionMultiple": st.session_state.calif_objetiva
-            }
+    "Nombre": nombre,
+    "Fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    "Habilidad": "Listening",
+    "GPT": st.session_state.calificacion_abierta,
+    "OpcionMultiple": st.session_state.calif_objetiva
+}
             df = pd.read_csv(archivo)
             df = pd.concat([df, pd.DataFrame([nueva_fila])], ignore_index=True)
             df.to_csv(archivo, index=False)
