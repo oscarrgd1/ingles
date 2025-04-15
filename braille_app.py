@@ -3,9 +3,11 @@ import openai
 import os
 from typing import List
 
-# Configura tu clave de API de OpenAI
-# openai.api_key = os.getenv("OPENAI_API_KEY")  # Se recomienda establecer esta variable en el entorno
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+st.set_page_config(page_title="Evaluación de Listening", layout="centered")
+
+from openai import OpenAI
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
 # Texto completo de la lectura
 LECTURA = """
 Louis Braille was born in 1809 near Paris. When he was three years old, he had an accident, and he became blind. 
@@ -36,10 +38,6 @@ PREGUNTAS = [
 ]
 
 # Función para calificar la pregunta abierta
-from openai import OpenAI
-
-client = OpenAI()
-
 def calificar_pregunta_abierta(respuesta_estudiante: str) -> int:
     prompt = f"""
 Actúa como un maestro de comprensión de lectura. Evalúa la siguiente respuesta del estudiante basada en el texto que se leyó.
@@ -66,7 +64,6 @@ Respuesta del estudiante:
         st.error(f"Error al calificar la respuesta: {e}")
         return 0
 
-
 # Función principal
 st.title("Evaluación de Listening: Louis Braille")
 
@@ -87,29 +84,36 @@ if nombre:
     if "calificacion_abierta" in st.session_state:
         st.markdown("### Responde las siguientes preguntas de opción múltiple")
         respuestas_correctas = 0
+        respuestas_usuario = []
         for i, (pregunta, correcta, opciones) in enumerate(PREGUNTAS):
             st.write(f"**{pregunta}**")
             opcion = st.radio("Selecciona una opción:", opciones, key=f"preg{i}")
-            if opcion.startswith(correcta):
-                respuestas_correctas += 1
+            respuestas_usuario.append((opcion, correcta))
 
         if st.button("Enviar respuestas de opción múltiple"):
+            for seleccion, correcta in respuestas_usuario:
+                if seleccion.startswith(correcta):
+                    respuestas_correctas += 1
+
             calif_objetiva = (respuestas_correctas / len(PREGUNTAS)) * 100
+            st.session_state.calif_objetiva = calif_objetiva
+
             st.success(f"Tu calificación en preguntas de opción múltiple es: {calif_objetiva}/100")
 
+    if st.button("Registrar inicio de práctica"):
+        if "calif_objetiva" in st.session_state and "calificacion_abierta" in st.session_state:
             st.markdown("---")
             st.header("Resultado final")
             st.write(f"**Nombre del estudiante:** {nombre}")
             st.write(f"**Comprensión general (GPT):** {st.session_state.calificacion_abierta}/100")
-            st.write(f"**Opción múltiple:** {calif_objetiva}/100")
+            st.write(f"**Opción múltiple:** {st.session_state.calif_objetiva}/100")
 
             frase = "¡Excelente trabajo! Cada paso que das te acerca a tus metas. 🌟"
             if st.session_state.calificacion_abierta < 50:
                 frase = "¡No te rindas! Estás aprendiendo algo nuevo y eso ya es un gran logro. 🚀"
-            elif calif_objetiva < 60:
+            elif st.session_state.calif_objetiva < 60:
                 frase = "¡Tú puedes mejorar! Sigue practicando, vas por buen camino. 📚"
 
             st.info(frase)
-
-            # Aquí podrías registrar los datos en archivo o base de datos
-            # Por ejemplo: guardar en un CSV o Google Sheets si deseas
+        else:
+            st.warning("Asegúrate de enviar tanto la respuesta abierta como las de opción múltiple antes de registrar.")
