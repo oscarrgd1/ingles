@@ -84,9 +84,9 @@ if nombre:
     if "calificacion_abierta" in st.session_state:
         st.markdown("### Responde las siguientes preguntas de opción múltiple")
         progreso = 0
+        total_preguntas = len(PREGUNTAS)
         respuestas_correctas = 0
         respuestas_usuario = []
-        total_preguntas = len(PREGUNTAS)
         for i, (pregunta, correcta, opciones) in enumerate(PREGUNTAS):
             progreso = int((i / total_preguntas) * 100)
             st.progress(progreso, text=f"Pregunta {i+1} de {total_preguntas}")
@@ -94,7 +94,7 @@ if nombre:
             opcion = st.radio("Selecciona una opción:", opciones, index=None, key=f"preg{i}")
             respuestas_usuario.append((opcion, correcta))
 
-                st.progress(100, text="¡Has llegado al final de las preguntas!")
+        st.progress(100, text="¡Has llegado al final de las preguntas!")
         if st.button("Enviar respuestas de opción múltiple"):
             preguntas_omitidas = [idx+1 for idx, (resp, _) in enumerate(respuestas_usuario) if resp is None]
             if preguntas_omitidas:
@@ -152,7 +152,7 @@ if nombre:
     "GPT": st.session_state.calificacion_abierta,
     "OpcionMultiple": st.session_state.calif_objetiva
 }
-            df = pd.read_csv(archivo)
+            df = pd.read_csv(archivo).drop(columns=[col for col in ["Puntaje"] if col in pd.read_csv(archivo).columns])
             df = pd.concat([df, pd.DataFrame([nueva_fila])], ignore_index=True)
             df.to_csv(archivo, index=False)
             st.success("Resultado guardado correctamente. Tu práctica ha sido registrada exitosamente en el sistema.")
