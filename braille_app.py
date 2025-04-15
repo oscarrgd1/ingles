@@ -83,14 +83,23 @@ if nombre:
 
     if "calificacion_abierta" in st.session_state:
         st.markdown("### Responde las siguientes preguntas de opción múltiple")
+        progreso = 0
         respuestas_correctas = 0
         respuestas_usuario = []
+                total_preguntas = len(PREGUNTAS)
         for i, (pregunta, correcta, opciones) in enumerate(PREGUNTAS):
+            progreso = int((i / total_preguntas) * 100)
+            st.progress(progreso, text=f"Pregunta {i+1} de {total_preguntas}")
             st.write(f"**{pregunta}**")
-            opcion = st.radio("Selecciona una opción:", opciones, key=f"preg{i}")
+            opcion = st.radio("Selecciona una opción:", opciones, index=None, key=f"preg{i}")
             respuestas_usuario.append((opcion, correcta))
 
+                st.progress(100, text="¡Has llegado al final de las preguntas!")
         if st.button("Enviar respuestas de opción múltiple"):
+            preguntas_omitidas = [idx+1 for idx, (resp, _) in enumerate(respuestas_usuario) if resp is None]
+            if preguntas_omitidas:
+                st.warning(f"Te faltó contestar la(s) pregunta(s): {', '.join(map(str, preguntas_omitidas))}. Por favor respóndelas antes de continuar.")
+                st.stop()
             for seleccion, correcta in respuestas_usuario:
                 if seleccion.startswith(correcta):
                     respuestas_correctas += 1
@@ -100,7 +109,7 @@ if nombre:
 
             st.success(f"Tu calificación en preguntas de opción múltiple es: {calif_objetiva}/100")
 
-    # Este botón se elimina para evitar duplicados. Ahora solo se registra tras ambas evaluaciones.
+    # Registro automático activado tras ambas evaluaciones. Botón eliminado para flujo más claro.
         import pandas as pd
         from datetime import datetime
         archivo = "resultados.csv"
@@ -146,7 +155,7 @@ if nombre:
             df = pd.read_csv(archivo)
             df = pd.concat([df, pd.DataFrame([nueva_fila])], ignore_index=True)
             df.to_csv(archivo, index=False)
-            st.success("Resultado guardado correctamente.")
+            st.success("Resultado guardado correctamente. Tu práctica ha sido registrada exitosamente en el sistema.")
 
             # Mostrar historial del estudiante
             historial = df[df["Nombre"] == nombre]
@@ -179,5 +188,4 @@ Escribe un mensaje de retroalimentación breve y motivador en español que le di
                     st.info(feedback)
                 except Exception as e:
                     st.warning("No se pudo generar retroalimentación personalizada.")
-        else:
-            st.warning("Asegúrate de enviar tanto la respuesta abierta como las de opción múltiple antes de registrar.")
+        
