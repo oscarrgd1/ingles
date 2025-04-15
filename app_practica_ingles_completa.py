@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 from datetime import datetime
@@ -30,7 +29,7 @@ st.success(f"Hola {st.session_state.nombre}, elige una actividad:")
 # Archivo donde se guardarán resultados
 archivo = "resultados.csv"
 if not os.path.exists(archivo):
-    df_init = pd.DataFrame(columns=["Nombre", "Fecha", "Habilidad", "Puntaje"])
+    df_init = pd.DataFrame(columns=["Nombre", "Fecha", "Habilidad", "GPT", "OpcionMultiple"])
     df_init.to_csv(archivo, index=False)
 
 # Menú de habilidades
@@ -63,22 +62,10 @@ if habilidad != "Selecciona una...":
     else:
         st.info(f"Aquí pronto aparecerá un ejercicio de {habilidad_limpia}. ¡Estamos trabajando en ello!")
 
-    # Registrar entrada con puntaje vacío
-    if st.button("Registrar inicio de práctica"):
-        df = pd.read_csv(archivo)
-        nueva_fila = {
-            "Nombre": st.session_state.nombre,
-            "Fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "Habilidad": habilidad_limpia,
-            "Puntaje": ""
-        }
-        df = pd.concat([df, pd.DataFrame([nueva_fila])], ignore_index=True)
-        df.to_csv(archivo, index=False)
-        st.success("Inicio de práctica registrado.")
-
 # Mostrar tabla comparativa
 st.header("📊 Tabla de resultados")
 df = pd.read_csv(archivo)
+df = df.drop(columns=[col for col in ["Puntaje"] if col in df.columns])
 if not df.empty:
     st.dataframe(df)
 else:
