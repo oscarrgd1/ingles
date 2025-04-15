@@ -67,7 +67,7 @@ Respuesta del estudiante:
 # Función principal
 st.title("Evaluación de Listening: Louis Braille")
 
-nombre = st.text_input("Escribe tu nombre completo")
+nombre = st.session_state.nombre if "nombre" in st.session_state else st.text_input("Escribe tu nombre completo")
 
 if st.button("Reproducir audio"):
     st.audio("braille.mp3")
@@ -100,7 +100,13 @@ if nombre:
 
             st.success(f"Tu calificación en preguntas de opción múltiple es: {calif_objetiva}/100")
 
-    if st.button("Registrar inicio de práctica"):
+    if st.button("Registrar inicio de práctica", key="registrar_inicio"):
+        import pandas as pd
+        from datetime import datetime
+        archivo = "resultados.csv"
+        if not os.path.exists(archivo):
+            pd.DataFrame(columns=["Nombre", "Fecha", "GPT", "OpcionMultiple"]).to_csv(archivo, index=False)
+
         if "calif_objetiva" in st.session_state and "calificacion_abierta" in st.session_state:
             st.markdown("---")
             st.header("Resultado final")
@@ -115,5 +121,49 @@ if nombre:
                 frase = "¡Tú puedes mejorar! Sigue practicando, vas por buen camino. 📚"
 
             st.info(frase)
+
+            # Guardar resultados en CSV
+            nueva_fila = {
+                "Nombre": nombre,
+                "Fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "GPT": st.session_state.calificacion_abierta,
+                "OpcionMultiple": st.session_state.calif_objetiva
+            }
+            df = pd.read_csv(archivo)
+            df = pd.concat([df, pd.DataFrame([nueva_fila])], ignore_index=True)
+            df.to_csv(archivo, index=False)
+            st.success("Resultado guardado correctamente.")
+
+            # Mostrar historial del estudiante
+            historial = df[df["Nombre"] == nombre]
+            st.markdown("### 📈 Historial de tus intentos")
+            st.dataframe(historial.sort_values("Fecha", ascending=False).reset_index(drop=True))
+
+            # Gráfico de evolución de puntajes
+            if not historial.empty:
+                st.line_chart(historial.sort_values("Fecha")[["GPT", "OpcionMultiple"]].reset_index(drop=True))
+
+                # Retroalimentación personalizada con GPT
+                prompt_feedback = f"""
+Eres un maestro que analiza el progreso de un estudiante a lo largo del tiempo.
+Este es su historial de puntajes en comprensión lectora (GPT) y opción múltiple:
+
+{historial[['Fecha', 'GPT', 'OpcionMultiple']].to_string(index=False)}
+
+Escribe un mensaje de retroalimentación breve y motivador en español que le diga al estudiante cómo va, si ha mejorado, y qué puede hacer para mejorar más.
+"""
+                try:
+                    feedback_response = client.chat.completions.create(
+                        model="gpt-4",
+                        messages=[
+                            {"role": "system", "content": "Eres un maestro alentador."},
+                            {"role": "user", "content": prompt_feedback}
+                        ]
+                    )
+                    feedback = feedback_response.choices[0].message.content.strip()
+                    st.markdown("### 🧠 Retroalimentación personalizada")
+                    st.info(feedback)
+                except Exception as e:
+                    st.warning("No se pudo generar retroalimentación personalizada.")
         else:
             st.warning("Asegúrate de enviar tanto la respuesta abierta como las de opción múltiple antes de registrar.")
