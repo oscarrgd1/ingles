@@ -36,6 +36,10 @@ PREGUNTAS = [
 ]
 
 # Función para calificar la pregunta abierta
+from openai import OpenAI
+
+client = OpenAI()
+
 def calificar_pregunta_abierta(respuesta_estudiante: str) -> int:
     prompt = f"""
 Actúa como un maestro de comprensión de lectura. Evalúa la siguiente respuesta del estudiante basada en el texto que se leyó.
@@ -49,18 +53,19 @@ Respuesta del estudiante:
 {respuesta_estudiante}
 """
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "Eres un experto en comprensión lectora."},
                 {"role": "user", "content": prompt}
             ]
         )
-        calificacion = int(response["choices"][0]["message"]["content"].strip())
+        calificacion = int(response.choices[0].message.content.strip())
         return min(max(calificacion, 0), 100)
     except Exception as e:
         st.error(f"Error al calificar la respuesta: {e}")
         return 0
+
 
 # Función principal
 st.title("Evaluación de Listening: Louis Braille")
