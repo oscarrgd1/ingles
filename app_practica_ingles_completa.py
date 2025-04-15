@@ -21,7 +21,7 @@ if not st.session_state.nombre:
         else:
             st.session_state.nombre = nombre.strip().title()
             st.success(f"¡Bienvenido, {st.session_state.nombre}!")
-            st.experimental_rerun()
+            st.rerun()
     st.stop()
 
 # Mostrar saludo
