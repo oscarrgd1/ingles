@@ -3,10 +3,10 @@ import openai
 import os
 from typing import List
 
-st.set_page_config(page_title="Evaluación de Listening", layout="centered")
-
 from openai import OpenAI
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
+st.set_page_config(page_title="Evaluación de Listening", layout="centered")
 
 # Texto completo de la lectura
 LECTURA = """
