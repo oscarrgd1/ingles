@@ -29,8 +29,6 @@ st.success(f"Hola {st.session_state.nombre}, elige una actividad:")
 
 # Archivo donde se guardarán resultados
 archivo = "resultados.csv"
-
-# Asegurar que el archivo existe
 if not os.path.exists(archivo):
     df_init = pd.DataFrame(columns=["Nombre", "Fecha", "Habilidad", "Puntaje"])
     df_init.to_csv(archivo, index=False)
@@ -44,8 +42,26 @@ habilidad = st.selectbox("Selecciona la habilidad que quieres practicar:", [
     "🗣 Speaking"
 ])
 
+# Cargar sección de listening desde otro archivo
+def mostrar_listening():
+    st.header("🎧 Ejercicio de Listening")
+    st.markdown("Aquí va el ejercicio de audio que ayudará a practicar comprensión auditiva.")
+    st.info("Ejecutando 'braille_app.py'...")
+    try:
+        with open("braille_app.py", "r", encoding="utf-8") as f:
+            exec(f.read(), globals())
+    except FileNotFoundError:
+        st.error("No se encontró el archivo 'braille_app.py'. Asegúrate de que esté en la misma carpeta.")
+    except Exception as e:
+        st.error(f"Ocurrió un error al ejecutar 'braille_app.py': {e}")
+
 if habilidad != "Selecciona una...":
-    st.info(f"Aquí pronto aparecerá un ejercicio de {habilidad}. ¡Estamos trabajando en ello!")
+    habilidad_limpia = habilidad.replace("🎧", "").replace("✍️", "").replace("🧠", "").replace("🗣", "").strip()
+
+    if habilidad_limpia == "Listening":
+        mostrar_listening()
+    else:
+        st.info(f"Aquí pronto aparecerá un ejercicio de {habilidad_limpia}. ¡Estamos trabajando en ello!")
 
     # Registrar entrada con puntaje vacío
     if st.button("Registrar inicio de práctica"):
@@ -53,7 +69,7 @@ if habilidad != "Selecciona una...":
         nueva_fila = {
             "Nombre": st.session_state.nombre,
             "Fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "Habilidad": habilidad.replace("🎧", "").replace("✍️", "").replace("🧠", "").replace("🗣", "").strip(),
+            "Habilidad": habilidad_limpia,
             "Puntaje": ""
         }
         df = pd.concat([df, pd.DataFrame([nueva_fila])], ignore_index=True)
